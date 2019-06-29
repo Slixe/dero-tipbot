@@ -1,0 +1,7 @@
+{
+	"host": "localhost",
+	"username": "root",
+	"password": "",
+	"database": "dero-tipbot",
+	"port": 8529
+}

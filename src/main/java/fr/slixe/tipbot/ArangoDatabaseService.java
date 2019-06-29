@@ -48,15 +48,23 @@ public class ArangoDatabaseService
 
 		log.info("Connecting to ArangoDB at {}:{}...", host, port);
 
-		this.arango = new ArangoDB.Builder()
-				.host(host, port)
-				.user(user)
-				.password(password)
-				.build();
+			this.arango = new ArangoDB.Builder()
+					.host(host, port)
+					.user(user)
+					.password(password)
+					.build();	
 
 		this.db = this.arango.db(database);
-		if (!this.db.exists()) {
-			this.db.create();
+		
+		try {
+			if (!this.db.exists()) {
+				this.db.create();
+			}
+		}
+		catch (Exception ignored)
+		{
+			System.err.println("Couldn't connect to ArangoDB! Please verify your config file.");
+			System.exit(1);
 		}
 
 		this.users = this.db.collection("users");
