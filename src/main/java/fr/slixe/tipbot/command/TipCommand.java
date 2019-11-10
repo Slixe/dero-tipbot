@@ -4,13 +4,15 @@ import java.math.BigDecimal;
 
 import javax.inject.Inject;
 
-import fr.slixe.tipbot.Wallet;
 import org.krobot.MessageContext;
 import org.krobot.command.ArgumentMap;
 import org.krobot.command.Command;
 import org.krobot.command.CommandHandler;
 import org.krobot.util.Dialog;
 
+import fr.slixe.tipbot.TipBot;
+import fr.slixe.tipbot.Wallet;
+import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.PrivateChannel;
 import net.dv8tion.jda.core.entities.User;
 
@@ -20,40 +22,50 @@ public class TipCommand implements CommandHandler {
 	@Inject
 	private Wallet wallet;
 	
+	@Inject
+	private TipBot bot;
+	
 	@Override
 	public Object handle(MessageContext ctx, ArgumentMap args) throws Exception 
 	{
 		User to = args.get("to");
 		
+		MessageChannel chan = ctx.getChannel();
+		
+		if (!(chan instanceof PrivateChannel))
+		{
+			chan = ctx.getUser().openPrivateChannel().complete();
+		}
+		
 		if (to.getId().equals(ctx.getUser().getId()))
-			return ctx.error("Error!", "You can't tip yourself!");
+			return chan.sendMessage(Dialog.error("Error!", bot.getMessage("tip.err.tip-yourself")));
 		
 		BigDecimal amount;
 		try {
 			amount = new BigDecimal(args.get("amount", String.class));
 			if (amount.signum() != 1)
-				return ctx.error("Error!", "Hey, please put a positive value.");
+				return chan.sendMessage(Dialog.error("Error!", bot.getMessage("tip.err.positive-value")));
 		}
 		catch (NumberFormatException e)
 		{
-			return ctx.error("Error!", String.format("%s, invalid amount", ctx.getUser().getAsMention()));
+			return chan.sendMessage(Dialog.error("Error!", String.format("tip.err.invalid-amount", ctx.getUser().getAsMention())));
 		}
 		
 		String id = ctx.getUser().getId();
 		if(!wallet.hasEnoughFunds(id, amount)) {
-			return ctx.error("Error!", "You do not have enough **DERO**");
+			return chan.sendMessage(Dialog.error("Error!", bot.getMessage("tip.err.not-enough")));
 		}
 		wallet.removeFunds(id, amount);
 		wallet.addFunds(to.getId(), amount);
 
-		PrivateChannel pc = to.openPrivateChannel().complete();
+		to.openPrivateChannel().queue((e) -> {
+			e.sendMessage(bot.dialog("Tip incoming!", String.format(bot.getMessage("tip.incoming"), amount, ctx.getUser().getAsTag()))).queue();
+		});
+		ctx.getUser().openPrivateChannel().queue((e) -> {
+			e.sendMessage(bot.dialog("Tip command", String.format(bot.getMessage("tip.sent"), amount, to.getAsMention()))).queue();
+		});
 		
-		if (pc != null)
-		{
-			pc.sendMessage(Dialog.info("Tip incoming!", String.format("Hey! You just received a tip of %s **DERO** from %s", amount, ctx.getUser().getAsTag()))).queue();
-		}
-		
-		return ctx.info("Tip command", String.format("You have just sent %s **DERO** to %s!", amount, to.getAsMention()));
+		return bot.dialog("Tip command", String.format(bot.getMessage("tip.general"), ctx.getUser().getAsMention(), amount, to.getAsMention()));
 	}
 
 }

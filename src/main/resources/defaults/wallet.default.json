@@ -1,0 +1,11 @@
+{
+	"username": "slixe",
+	"password": "slixe",
+	"host": "localhost",
+	"port": 30309,
+	"autoLaunch": true,
+	"launchPath": "/home/slixe/Projects/DERO/dero-tipbot/dero_linux_amd64/dero-wallet-cli-linux-amd64",
+	"daemon": "96.43.137.154:30306",
+	"walletFilePath": "/home/slixe/Projects/DERO/dero-tipbot/dero_linux_amd64/DEROTipBot", #You should create the wallet yourself
+	"walletPassword": "derotipbot123"
+}

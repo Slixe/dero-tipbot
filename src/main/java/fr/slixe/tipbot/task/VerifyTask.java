@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.TimerTask;
 
-import org.krobot.util.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,9 +11,7 @@ import com.arangodb.entity.BaseDocument;
 import com.google.inject.Inject;
 
 import fr.slixe.dero4j.RequestException;
-import fr.slixe.dero4j.structure.Tx;
 import fr.slixe.tipbot.Wallet;
-import net.dv8tion.jda.core.entities.PrivateChannel;
 
 public class VerifyTask extends TimerTask {
 
@@ -30,7 +27,7 @@ public class VerifyTask extends TimerTask {
 	{
 		int blockHeight;
 		try {
-			blockHeight = wallet.api.getHeight();
+			blockHeight = wallet.getApi().getHeight();
 		} catch (RequestException e) {
 			log.error("Looks like wallet isn't reachable...");
 			return;
@@ -51,7 +48,7 @@ public class VerifyTask extends TimerTask {
 			try {
 				if (diff == 20) //we wait 20 blocks to verify instead of veryfing every block
 				{
-					if (!this.wallet.api.isValidTx(txHash))
+					if (!this.wallet.getApi().isValidTx(txHash))
 					{
 						this.wallet.getDB().removeTx(txHash);
 						continue;

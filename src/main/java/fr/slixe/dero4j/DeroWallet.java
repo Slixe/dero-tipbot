@@ -44,6 +44,7 @@ public class DeroWallet implements IWallet
 
 	private JSONObject request(JSONObject json) throws RequestException
 	{
+		System.out.println(json);
 		HttpResponse<JsonNode> req;
 		try {
 			req = Unirest.post(host).basicAuth(username, password).header("Content-Type", "application/json").body(json).asJson();

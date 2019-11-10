@@ -1,0 +1,26 @@
+{
+	"iconUrl": "https://blockchain.dero.network/tipbot_logo.png",
+	"customColor": "#808080",
+	"withdraw": {
+		"err": {
+			"positive-value": "Hey, please put a positive value.",
+			"invalid-amount": "%s, invalid amount",
+			"not-enough": "You haven't enough DERO to withdraw.",
+			"transfer": "An error has occured during withdraw command"
+		}
+	},
+	"tip": {
+		"err": {
+			"positive-value": "Hey, please put a positive value.",
+			"invalid-amount": "%s, invalid amount",
+			"tip-yourself": "You can't tip yourself!",
+			"not-enough": "You haven't enough DERO to withdraw."
+		},
+
+		"incoming": "Hey! You just received a tip of %s **DERO** from %s",
+		"sent": "You have just sent %s **DERO** to %s!",
+		"general": "%s has just sent %s **DERO** to %s."
+	},
+	"balance": "__**DERO balance**:__ %s\n__**Unconfirmed balance**:__ %s\n\n__**Deposit address**:__ %s",
+	"wallet-height": 0
+}

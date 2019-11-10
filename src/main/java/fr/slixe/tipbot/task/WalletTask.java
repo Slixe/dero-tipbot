@@ -8,13 +8,12 @@ import org.krobot.util.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.arangodb.entity.BaseDocument;
 import com.google.inject.Inject;
 
 import fr.slixe.dero4j.RequestException;
 import fr.slixe.dero4j.structure.Tx;
+import fr.slixe.tipbot.User;
 import fr.slixe.tipbot.Wallet;
-import net.dv8tion.jda.core.entities.PrivateChannel;
 
 public class WalletTask extends TimerTask
 {
@@ -28,14 +27,14 @@ public class WalletTask extends TimerTask
 	public WalletTask() {}
 
 	@Override
-	public void run() //TODO improve
+	public void run()
 	{
-		this.lastBlockHeight = this.wallet.getDB().getLastWalletHeight();
+		this.lastBlockHeight = this.wallet.getSavedWalletHeight();
 		
 		int blockHeight;
 		int diff = 0;
 		try {
-			blockHeight = this.wallet.api.getHeight();
+			blockHeight = this.wallet.getApi().getHeight();
 		} catch (RequestException e) 
 		{
 			log.error("TipBot can't retrieve block height information from wallet!");
@@ -54,37 +53,34 @@ public class WalletTask extends TimerTask
 		}
 		
 		
-		final List<BaseDocument> users = this.wallet.getDB().getUsers();
+		final List<User> users = this.wallet.getDB().getUsers();
 
-		for (BaseDocument doc : users) {
-			final String userId = doc.getKey();
-			final String paymentId = (String) doc.getAttribute("paymentId");
-			final PrivateChannel privateChannel = Krobot.getRuntime().jda().getUserById(userId).openPrivateChannel()
-					.complete();
+		for (User doc : users) {
+			final String userId = doc.getKey(); //using userId as key
+			final String paymentId = (String) doc.getPaymentId();
+			
+			if (paymentId == null) continue;
+			
 			final List<Tx> transactions;
 			try {
-				transactions = this.wallet.api.getTransactions(paymentId, blockHeight);
+				transactions = this.wallet.getApi().getTransactions(paymentId, blockHeight);
 			} catch (RequestException e) {
 				e.printStackTrace();
 				continue;
 			}
-			for (Tx transaction : transactions) {
-				log.info("New incoming transaction for user " + userId);
-				this.wallet.addUnconfirmedFunds(userId, transaction.getAmount());
-				this.wallet.getDB().addTx(transaction, userId);
-				//TODO instead of adding directly, we must wait 20 confirmations
-																	   //get_transfer_by_txid with txid as params and compare block height with current
-				if (privateChannel != null) {
-					pmUser(privateChannel, transaction);
+			
+			Krobot.getRuntime().jda().getUserById(userId).openPrivateChannel().queue((e) -> {
+				
+				for (Tx tx : transactions) {
+					log.info("New incoming transaction for user " + userId);
+					this.wallet.addUnconfirmedFunds(userId, tx.getAmount());
+					this.wallet.getDB().addTx(tx, userId);
+
+					e.sendMessage(Dialog.info("Deposit", String.format("__**Amount**__: %s\n__**Tx hash**__: %s\n__**Block height**__: %s", tx.getAmount(), tx.getTxHash(), tx.getBlockHeight()))).queue();
 				}
-			}
+			});
 		}
 		this.lastBlockHeight = blockHeight + diff;
-		this.wallet.getDB().setLastWalletHeight(this.lastBlockHeight);
-	}
-
-	private void pmUser(PrivateChannel pc, Tx tx)
-	{
-		pc.sendMessage(Dialog.info("Deposit", String.format("__**Amount**__: %s\n__**Tx hash**__: %s\n__**Block height**__: %s", tx.getAmount(), tx.getTxHash(), tx.getBlockHeight()))).queue();
+		this.wallet.saveWalletHeight(this.lastBlockHeight);
 	}
 }

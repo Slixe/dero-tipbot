@@ -18,6 +18,7 @@ import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.BaseDocument;
 import com.google.inject.Inject;
 
+import fr.slixe.dero4j.RequestException;
 import fr.slixe.dero4j.structure.Tx;
 import fr.slixe.dero4j.util.MapBuilder;
 
@@ -29,10 +30,12 @@ public class ArangoDatabaseService
 	@Inject
 	private ConfigProvider config;
 	
+	@Inject
+	private Wallet wallet;
+	
 	private ArangoDB arango;
 	private ArangoDatabase db;
 	private ArangoCollection users;
-	private ArangoCollection info;
 	private ArangoCollection txs;
 	
 	public ArangoDatabaseService()
@@ -71,11 +74,6 @@ public class ArangoDatabaseService
 		if (!this.users.exists()) {
 			this.users.create();
 		}
-
-		this.info = this.db.collection("info");
-		if (!this.info.exists()) {
-			this.info.create();
-		}
 		
 		this.txs = this.db.collection("txs");
 		if (!this.txs.exists()) {
@@ -86,165 +84,107 @@ public class ArangoDatabaseService
 	
 	}
 	
-	public void setBalance(String userId, BigDecimal amount)
+	public void setBalance(String key, BigDecimal amount)
 	{
-		BaseDocument doc = users.getDocument(userId, BaseDocument.class);
+		User doc = users.getDocument(key, User.class);
 
 		if (doc == null) {
-			doc = new BaseDocument();
-			doc.setKey(userId);
-
+			doc = createUser(key);
 			users.insertDocument(doc);
 		}
 
-		doc.addAttribute("balance", amount);
+		doc.setBalance(amount);
 		users.updateDocument(doc.getKey(), doc);
 	}
 
 	public BigDecimal getBalance(String userId)
 	{
-		BaseDocument doc = users.getDocument(userId, BaseDocument.class);
+		User doc = users.getDocument(userId, User.class);
 		if (doc == null) {
-			return BigDecimal.ZERO;
-		}
-
-		String result = (String) doc.getAttribute("balance");
-		if (result == null) {
-			return BigDecimal.ZERO;
-		}
-
-		return new BigDecimal(result);
-	}
-
-	public void setUnconfirmedBalance(String userId, BigDecimal amount)
-	{
-		BaseDocument doc = users.getDocument(userId, BaseDocument.class);
-
-		if (doc == null) {
-			doc = new BaseDocument();
-			doc.setKey(userId);
-
+			doc = createUser(userId);
 			users.insertDocument(doc);
 		}
 
-		doc.addAttribute("unconfirmed_balance", amount);
+		return doc.getBalance();
+	}
+
+	public void setUnconfirmedBalance(String key, BigDecimal amount)
+	{
+		User doc = users.getDocument(key, User.class);
+
+		if (doc == null)
+		{
+			doc = createUser(key);
+			users.insertDocument(doc);
+		}
+
+		doc.setUnconfirmedBalance(amount);
 		users.updateDocument(doc.getKey(), doc);
 	}
 
 	public BigDecimal getUnconfirmedBalance(String userId)
 	{
-		BaseDocument doc = users.getDocument(userId, BaseDocument.class);
+		User doc = users.getDocument(userId, User.class);
 		if (doc == null) {
-			return BigDecimal.ZERO;
-		}
-
-		String result = (String) doc.getAttribute("unconfirmed_balance");
-		if (result == null) {
-			return BigDecimal.ZERO;
-		}
-
-		return new BigDecimal(result);
-	}
-
-	public void setLastWalletHeight(int blockHeight)
-	{
-		BaseDocument doc = users.getDocument("infos", BaseDocument.class);
-
-		if (doc == null) {
-			doc = new BaseDocument();
-			doc.setKey("infos");
-
+			doc = createUser(userId);
 			users.insertDocument(doc);
 		}
 
-		doc.addAttribute("walletHeight", blockHeight);
-		users.updateDocument(doc.getKey(), doc);
+		return doc.getUnconfirmedBalance();
 	}
 
-	public int getLastWalletHeight()
+	public String getAddress(String key)
 	{
-		int height = 0;
-		
-		BaseDocument doc = this.info.getDocument("infos", BaseDocument.class);
-		
-		if (doc == null)
-		{
-			doc = new BaseDocument();
-			doc.setKey("infos");
-			this.info.insertDocument(doc);
-		}
-		
-		String str = (String) doc.getAttribute("walletHeight");
-		
-		if (str == null)
-			return height;
-		else
-			return Integer.parseInt(str);
-	}
-
-	public String getAddress(String userId)
-	{
-		BaseDocument doc = users.getDocument(userId, BaseDocument.class);
+		User doc = users.getDocument(key, User.class);
 		if (doc == null) {
-			return null;
-		}
-
-		String result = (String) doc.getAttribute("address");
-		if (result == null) {
-			return null;
-		}
-
-		return result;
-	}
-
-	public void setAddress(String userId, String address)
-	{
-		BaseDocument doc = users.getDocument(userId, BaseDocument.class);
-
-		if (doc == null) {
-			doc = new BaseDocument();
-			doc.setKey(userId);
-
+			doc = createUser(key);
 			users.insertDocument(doc);
 		}
 
-		doc.addAttribute("address", address);
+		return doc.getAddress();
+	}
+
+	public void setAddress(String key, String address)
+	{
+		User doc = users.getDocument(key, User.class);
+
+		if (doc == null) {
+			doc = createUser(key);
+			users.insertDocument(doc);
+		}
+
+		doc.setAddress(address);
 		users.updateDocument(doc.getKey(), doc);
 	}
 
 	public String getPaymentId(String userId)
 	{
-		BaseDocument doc = users.getDocument(userId, BaseDocument.class);
+		User doc = users.getDocument(userId, User.class);
 		if (doc == null) {
-			return null;
-		}
-
-		String result = (String) doc.getAttribute("paymentId");
-		if (result == null) {
-			return null;
-		}
-
-		return result;
-	}
-
-	public void setPaymentId(String userId, String paymentId)
-	{
-		BaseDocument doc = users.getDocument(userId, BaseDocument.class);
-
-		if (doc == null) {
-			doc = new BaseDocument();
-			doc.setKey(userId);
+			doc = createUser(userId);
 			users.insertDocument(doc);
 		}
 
-		doc.addAttribute("paymentId", paymentId);
+		return doc.getPaymentId();
+	}
+
+	public void setPaymentId(String key, String paymentId)
+	{
+		User doc = users.getDocument(key, User.class);
+
+		if (doc == null) {
+			doc = createUser(key);
+			users.insertDocument(doc);
+		}
+
+		doc.setPaymentId(paymentId);
 		users.updateDocument(doc.getKey(), doc);
 	}
 
 
-	public List<BaseDocument> getUsers()
+	public List<User> getUsers()
 	{
-		return all("FOR doc IN users RETURN doc", BaseDocument.class, new HashMap<>());
+		return all("FOR doc IN users RETURN doc", User.class, new HashMap<>());
 	}
 
 	public void addTx(Tx tx, String userId)
@@ -306,5 +246,17 @@ public class ArangoDatabaseService
 	protected <T> List<T> all(String query, Class<T> type, Map<String, Object> vars)
 	{
 		return db.query(query, vars, null, type).asListRemaining();
+	}
+	
+	protected User createUser(String userId)
+	{
+		String paymentId = wallet.getApi().paymentId();
+		try {
+			return new User(userId, wallet.getApi().generateAddress(paymentId), paymentId, BigDecimal.ZERO, BigDecimal.ZERO);
+		} catch (RequestException e) {
+			e.printStackTrace();
+		}
+		
+		return new User(userId, null, paymentId, BigDecimal.ZERO, BigDecimal.ZERO);
 	}
 }

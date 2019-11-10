@@ -8,20 +8,20 @@ public class User
 {
 	@DocumentField(DocumentField.Type.KEY)
 	private String key;
-	private String userId;
 	private String address;
 	private String paymentId;
 	private BigDecimal balance;
-
+	private BigDecimal unconfirmedBalance;
+	
 	public User() {}
 
-	public User(String key, String userId, String address, String paymentId, BigDecimal balance)
+	public User(String userId, String address, String paymentId, BigDecimal balance, BigDecimal unconfirmedBalance)
 	{
-		this.key = key;
-		this.userId = userId;
+		this.key = userId;
 		this.address = address;
 		this.paymentId = paymentId;
 		this.balance = balance;
+		this.unconfirmedBalance = unconfirmedBalance;
 	}
 
 	public String getKey()
@@ -29,6 +29,12 @@ public class User
 		return key;
 	}
 
+	public void setKey(String key)
+	{
+		this.key = key;
+	}
+	
+	/*
 	public String getUserId()
 	{
 		return userId;
@@ -38,7 +44,7 @@ public class User
 	{
 		this.userId = userId;
 	}
-
+	 */
 	public String getAddress()
 	{
 		return address;
@@ -67,5 +73,15 @@ public class User
 	public void setBalance(BigDecimal balance)
 	{
 		this.balance = balance;
+	}
+	
+	public BigDecimal getUnconfirmedBalance()
+	{
+		return unconfirmedBalance;
+	}
+
+	public void setUnconfirmedBalance(BigDecimal balance)
+	{
+		this.unconfirmedBalance = balance;
 	}
 }
