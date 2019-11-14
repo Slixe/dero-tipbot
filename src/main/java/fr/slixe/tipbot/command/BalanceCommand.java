@@ -12,7 +12,7 @@ import fr.slixe.tipbot.Wallet;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.PrivateChannel;
 
-@Command(value = "balance", desc = "get your balance and deposit address")
+@Command(value = "balance", desc = "get your balance and deposit address", errorMP = true)
 public class BalanceCommand implements CommandHandler {
 
 	@Inject
@@ -34,13 +34,14 @@ public class BalanceCommand implements CommandHandler {
 		{
 			chan = ctx.getUser().openPrivateChannel().complete();
 		}
-		
 		if (funds.equals("0") || funds.equals("0E-12")) //dirty i know :/
 			funds = "0.000000000000";
 		
 		if (unconfirmedFunds.equals("0") || unconfirmedFunds.equals("0E-12"))
-			unconfirmedFunds = "0.000000000000";		
+			unconfirmedFunds = "0.000000000000";
+
+		chan.sendMessage(bot.dialog("Balance", String.format(bot.getMessage("balance"), funds, unconfirmedFunds, wallet.getAddress(id)))).queue();
 		
-		return chan.sendMessage(bot.dialog("Balance", String.format(bot.getMessage("balance"), funds, unconfirmedFunds, wallet.getAddress(id))));
+		return null;
 	}
 }

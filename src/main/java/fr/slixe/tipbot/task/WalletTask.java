@@ -3,10 +3,10 @@ package fr.slixe.tipbot.task;
 import java.util.List;
 import java.util.TimerTask;
 
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.krobot.Krobot;
 import org.krobot.util.Dialog;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
@@ -17,7 +17,7 @@ import fr.slixe.tipbot.Wallet;
 
 public class WalletTask extends TimerTask
 {
-	private static final Logger log = LoggerFactory.getLogger("WalletTask");
+	private static final Logger log = LoggerContext.getContext().getLogger("WalletTask");
 
 	@Inject
 	private Wallet wallet;
@@ -51,7 +51,6 @@ public class WalletTask extends TimerTask
 			blockHeight = blockHeight - diff + 1;
 			log.warn("Now, it's " + blockHeight + " with a diff at " + diff);
 		}
-		
 		
 		final List<User> users = this.wallet.getDB().getUsers();
 

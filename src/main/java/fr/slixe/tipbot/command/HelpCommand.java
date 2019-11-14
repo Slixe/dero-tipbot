@@ -50,7 +50,7 @@ import net.dv8tion.jda.core.entities.PrivateChannel;
  * @version 2.2.0
  * @since 2.0.0
  */
-@Command(value = "help", desc = "Displays the list of commands with their descriptions")
+@Command(value = "help", desc = "Displays the list of commands with their descriptions", errorMP = true)
 public class HelpCommand implements CommandHandler
 {
     private KrobotRuntime runtime;
@@ -108,7 +108,7 @@ public class HelpCommand implements CommandHandler
 
         for(int i = 1; i < messages.size(); i++)
         {
-        	 chan.sendMessage(Dialog.info(null, messages.get(i).toString())).queue();;
+        	 chan.sendMessage(Dialog.info(null, messages.get(i).toString())).queue();
         }
 
         return null;

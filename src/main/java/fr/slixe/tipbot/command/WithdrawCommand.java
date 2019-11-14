@@ -16,7 +16,7 @@ import fr.slixe.tipbot.Wallet;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.PrivateChannel;
 
-@Command(value = "withdraw <amount> <address>", desc = "withdraw your coins from bot")
+@Command(value = "withdraw <amount> <address>", desc = "withdraw your coins from bot", errorMP = true)
 public class WithdrawCommand implements CommandHandler {
 
 	@Inject
@@ -39,15 +39,11 @@ public class WithdrawCommand implements CommandHandler {
 		try {
 			amount = new BigDecimal(args.get("amount", String.class));
 			if (amount.signum() != 1)
-			{
-				chan.sendMessage(Dialog.error("Error!", bot.getMessage("withdraw.err.positive-value"))).queue();
-				return null;
-			}
+				throw new CommandException(bot.getMessage("withdraw.err.positive-value"));
 		}
 		catch (NumberFormatException e)
 		{
-			chan.sendMessage(Dialog.error("Error!", String.format(bot.getMessage("withdraw.err.invalid-amount"), ctx.getUser().getAsMention()))).queue();
-			return null;
+			throw new CommandException(String.format(bot.getMessage("withdraw.err.invalid-amount"), ctx.getUser().getAsMention()));
 		}
 		
 		String address = args.get("address");
@@ -55,8 +51,7 @@ public class WithdrawCommand implements CommandHandler {
 		
 		if (!wallet.hasEnoughFunds(id, amount))
 		{
-			chan.sendMessage(Dialog.error("Error!", bot.getMessage("withdraw.err.not-enough"))).queue();
-			return null;
+			throw new CommandException(bot.getMessage("withdraw.err.not-enough"));
 		}
 		
 		BigDecimal fee;
@@ -65,18 +60,20 @@ public class WithdrawCommand implements CommandHandler {
 		} catch (RequestException e)
 		{
 			e.printStackTrace();
-			return chan.sendMessage(Dialog.error("Error !", e.getMessage()));
+			throw new CommandException(e.getMessage());
 		}
 		String tx;
 		try {
 			tx = wallet.getApi().transfer(address, amount);
 		} catch (RequestException e) {
 			e.printStackTrace();
-			return chan.sendMessage(Dialog.error("Error!", bot.getMessage("withdraw.err.transfer")));
+			throw new CommandException(bot.getMessage("withdraw.err.transfer"));
 		}
 		
 		wallet.removeFunds(id, amount);
 		
-		return chan.sendMessage(bot.dialog("Withdraw", String.format("You've withdrawn %s **DERO** to:\n%s\n\n__**Tx hash**__:\n%s\n\n__**Fee**__: %s", amount.subtract(fee), address, tx, fee)));
+		chan.sendMessage(bot.dialog("Withdraw", String.format("You've withdrawn %s **DERO** to:\n%s\n\n__**Tx hash**__:\n%s\n\n__**Fee**__: %s", amount.subtract(fee), address, tx, fee))).queue();
+		
+		return null;
 	}
 }

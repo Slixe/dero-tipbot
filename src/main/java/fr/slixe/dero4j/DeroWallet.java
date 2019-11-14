@@ -53,9 +53,11 @@ public class DeroWallet implements IWallet
 			throw new RequestException("Wallet is offline?");
 		}
 		JSONObject response = req.getBody().getObject();
+		System.out.println(response);
 		if (!response.has("result")) {
 			throw new RequestException(response.getJSONObject("error").getString("message"));
 		}
+		
 		return response.getJSONObject("result");
 	}
 

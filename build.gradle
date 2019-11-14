@@ -37,21 +37,29 @@ repositories {
 
 dependencies {
 	implementation 'com.google.guava:guava:26.0-jre'
-	implementation 'org.krobot:krobot-framework:3.0.0-ALPHA-09'
+	//implementation 'org.krobot:krobot-framework:3.0.0-ALPHA-09'
+	implementation project(":krobot")
+	
 	implementation 'com.mashape.unirest:unirest-java:1.4.9'
 	implementation 'com.arangodb:arangodb-java-driver:5.0.0'
-	//implementation 'net.dv8tion:JDA:4.BETA.0_1'
+	implementation 'org.apache.commons:commons-lang3:3.8.1'
+    implementation 'net.dv8tion:JDA:3.8.3_460'
+    implementation 'com.google.inject:guice:4.2.2'
+    implementation 'org.apache.logging.log4j:log4j-api:2.11.2'
+    implementation 'org.apache.logging.log4j:log4j-core:2.11.2'
 }
 
-task fatjar(type: Jar) {
+task fatJar(type: Jar) {
 	from {
 		configurations
-				.compile
+				.runtimeClasspath
 				.findAll { !it.name.endsWith('pom') }
 				.collect { it.isDirectory() ? it : zipTree(it) }
 	}
-
 	with jar
+	
+	baseName = project.name + '-all'
+	
 
 	manifest {
 		attributes 'Main-Class': mainClassName

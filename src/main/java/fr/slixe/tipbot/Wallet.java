@@ -1,8 +1,6 @@
 package fr.slixe.tipbot;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.File;
 import java.lang.ProcessBuilder.Redirect;
 import java.math.BigDecimal;
 
@@ -28,8 +26,8 @@ public class Wallet {
 	private ConfigProvider config;
 	
 	private DeroWallet api;
-
 	private Thread thread;
+	private volatile Process process;
 	
 	public Wallet() {}
 	
@@ -43,56 +41,32 @@ public class Wallet {
 		boolean autoLaunch = this.config.at("wallet.autoLaunch", boolean.class);
 		String walletPath = this.config.at("wallet.walletFilePath");
 		String walletPassword = this.config.at("wallet.walletPassword");
+
 		if (autoLaunch)
 		{
 			log.info("Trying to start DERO Wallet...");
 			String path = this.config.at("wallet.launchPath");
+			File walletFile = new File(path);
 			
+			if (!walletFile.exists())
+			{
+				log.error(String.format("Error! Please verify your config, wallet file not found at '%s'.", path));
+				System.exit(1);
+			}
+				
 			this.thread = new Thread(() -> {
-				Process process;
 				
 				try {
 					String cmd[] = {path, "--testnet", "--rpc-server", String.format("--rpc-bind=%s:%d", host, port), String.format("--rpc-login=%s:%s", username, password),
 							String.format("--daemon-address=%s", daemon), String.format("--wallet-file=%s", walletPath), String.format("--password=%s", walletPassword)};
-					ProcessBuilder builder = new ProcessBuilder(cmd).redirectInput(Redirect.INHERIT).redirectError(Redirect.INHERIT).redirectOutput(Redirect.INHERIT);
-					process = builder.start();
-					System.out.println(process.getOutputStream());
-				} catch (IOException e)
+					ProcessBuilder builder = new ProcessBuilder(cmd)/*.redirectInput(Redirect.INHERIT)*/.redirectError(Redirect.INHERIT).redirectOutput(Redirect.INHERIT);
+					this.process = builder.start();
+					this.process.waitFor();
+				} catch (Exception e)
 				{
 					log.error("Can't launch DERO Wallet!!");
 					e.printStackTrace();
 					return;
-				}
-				
-				/*
-				if (!walletExist)
-				{
-					System.out.println("called");
-					OutputStream output = process.getOutputStream();
-					try {
-						output.write("2".getBytes());
-						output.flush();
-						for (int i = 0; i < 2; i++)
-							writer.write("");
-						writer.write("0");
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-				}
-				*/
-				
-
-				BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-				String line;
-				
-				try {
-					while ((line = reader.readLine()) != null)
-						log.info(line);
-					
-					process.waitFor();
-				} catch (Exception e) {
-					e.printStackTrace();
-
 				}
 			});
 			
@@ -172,5 +146,9 @@ public class Wallet {
 	{
 		return this.api;
 	}
-
+	
+	public Process getProcess()
+	{
+		return this.process;
+	}
 }

@@ -63,7 +63,6 @@ public class VerifyTask extends TimerTask {
 				continue;
 			}
 			
-			
 			this.wallet.getDB().updateTx(txHash, diff);			
 		}
 	}
