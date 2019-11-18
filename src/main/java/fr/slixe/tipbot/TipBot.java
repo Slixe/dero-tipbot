@@ -126,10 +126,8 @@ public class TipBot extends KrobotModule {
 		wallet.start();
 		
 		String daemonHost = this.config.at("wallet.daemon");
-		String[] daemonSplit = daemonHost.split(":");
-		String daemonAddress = daemonSplit[0];
-		int daemonPort = Integer.parseInt(daemonSplit[1]);
-		this.daemon = new Daemon(daemonAddress, daemonPort);
+
+		this.daemon = new Daemon(daemonHost);
 		
 		timer.scheduleAtFixedRate(task, 0, TimeUnit.SECONDS.toMillis(30));
 		timer.scheduleAtFixedRate(verifyTask, 0, TimeUnit.SECONDS.toMillis(30));

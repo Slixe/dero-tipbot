@@ -13,6 +13,11 @@ public class Daemon
 {
 	private final String host;
 
+	public Daemon(String host)
+	{
+		this.host = host + (host.endsWith("/") ? "" : "/") + "json_rpc";
+	}
+	
 	public Daemon(String host, int port)
 	{
 		this.host = String.format("http://%s:%d/json_rpc", host, port);
