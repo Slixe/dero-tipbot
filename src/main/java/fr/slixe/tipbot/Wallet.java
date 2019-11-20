@@ -57,7 +57,7 @@ public class Wallet {
 			this.thread = new Thread(() -> {
 				
 				try {
-					String cmd[] = {path, "--testnet", "--rpc-server", String.format("--rpc-bind=%s:%d", host, port), String.format("--rpc-login=%s:%s", username, password),
+					String cmd[] = {path, /*"--testnet",*/ "--rpc-server", String.format("--rpc-bind=%s:%d", host, port), String.format("--rpc-login=%s:%s", username, password),
 							String.format("--daemon-address=%s", daemon), String.format("--wallet-file=%s", walletPath), String.format("--password=%s", walletPassword)};
 					ProcessBuilder builder = new ProcessBuilder(cmd)/*.redirectInput(Redirect.INHERIT)*/.redirectError(Redirect.INHERIT).redirectOutput(Redirect.INHERIT);
 					this.process = builder.start();
