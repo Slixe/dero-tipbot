@@ -2,6 +2,7 @@ package fr.slixe.tipbot.command;
 
 import java.math.BigDecimal;
 
+import org.jline.utils.Log;
 import org.krobot.MessageContext;
 import org.krobot.command.ArgumentMap;
 import org.krobot.command.Command;
@@ -62,10 +63,17 @@ public class WithdrawCommand implements CommandHandler {
 			e.printStackTrace();
 			throw new CommandException(e.getMessage());
 		}
+		
+		BigDecimal amountWithoutFee = amount.subtract(fee);
 
+		if (amountWithoutFee.signum() != 1)
+		{
+			throw new CommandException("Not enough funds!");
+		}
+		
 		String tx;
 		try {
-			tx = wallet.getApi().transfer(address, amount);
+			tx = wallet.getApi().transfer(address, amountWithoutFee);
 		} catch (RequestException e) {
 			e.printStackTrace();
 			throw new CommandException(bot.getMessage("withdraw.err.transfer"));
@@ -73,7 +81,7 @@ public class WithdrawCommand implements CommandHandler {
 
 		wallet.removeFunds(id, amount);
 
-		chan.sendMessage(bot.dialog("Withdraw", String.format("You've withdrawn %s **DERO** to:\n%s\n\n__**Tx hash**__:\n%s\n\n__**Fee**__: %s", amount.subtract(fee), address, tx, fee))).queue();
+		chan.sendMessage(bot.dialog("Withdraw", String.format("You've withdrawn %s **DERO** to:\n%s\n\n__**Tx hash**__:\n%s\n\n__**Fee**__: %s", amountWithoutFee, address, tx, fee))).queue();
 
 		return null;
 	}
