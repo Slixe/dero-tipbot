@@ -15,7 +15,7 @@ public class Daemon
 
 	public Daemon(String host)
 	{
-		this.host = host + (host.endsWith("/") ? "" : "/") + "json_rpc";
+		this.host = (host.contains("://") ? "" : "http://") + host + (host.endsWith("/") ? "" : "/") + "json_rpc";
 	}
 	
 	public Daemon(String host, int port)

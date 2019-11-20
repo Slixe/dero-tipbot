@@ -129,8 +129,8 @@ public class TipBot extends KrobotModule {
 
 		this.daemon = new Daemon(daemonHost);
 		
-		timer.scheduleAtFixedRate(task, 0, TimeUnit.SECONDS.toMillis(30));
-		timer.scheduleAtFixedRate(verifyTask, 0, TimeUnit.SECONDS.toMillis(30));
+		timer.scheduleAtFixedRate(task, TimeUnit.SECONDS.toMillis(20), TimeUnit.SECONDS.toMillis(30));
+		timer.scheduleAtFixedRate(verifyTask, TimeUnit.SECONDS.toMillis(20), TimeUnit.SECONDS.toMillis(30));
 	}
 	
 	public void loadConfig()

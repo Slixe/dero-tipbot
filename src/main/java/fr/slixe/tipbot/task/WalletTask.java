@@ -6,12 +6,13 @@ import java.util.TimerTask;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.krobot.Krobot;
-import org.krobot.util.Dialog;
 
 import com.google.inject.Inject;
 
 import fr.slixe.dero4j.RequestException;
 import fr.slixe.dero4j.structure.Tx;
+import fr.slixe.tipbot.TipBot;
+import fr.slixe.tipbot.Transaction;
 import fr.slixe.tipbot.User;
 import fr.slixe.tipbot.Wallet;
 
@@ -22,6 +23,9 @@ public class WalletTask extends TimerTask
 	@Inject
 	private Wallet wallet;
 
+	@Inject
+	private TipBot bot;
+	
 	private int lastBlockHeight = 0;
 	
 	public WalletTask() {}
@@ -45,37 +49,52 @@ public class WalletTask extends TimerTask
 		{
 			log.info("skip this execution, block height is the same.");
 			return;
-		} else if ((diff = blockHeight - this.lastBlockHeight) > 1)
+		} else if (blockHeight - this.lastBlockHeight > 1)
 		{
-			log.warn("Multiple blocks detected, current block height is " + blockHeight);
+			diff = blockHeight - this.lastBlockHeight;
+			log.warn("Multiple blocks detected, current wallet block height is " + blockHeight + " and last block height is " + this.lastBlockHeight);
 			blockHeight = blockHeight - diff + 1;
-			log.warn("Now, it's " + blockHeight + " with a diff at " + diff);
+			log.warn("Now, it's " + blockHeight);
 		}
+		
+		if (blockHeight < 0)
+			blockHeight = 0;
 		
 		final List<User> users = this.wallet.getDB().getUsers();
 
 		for (User doc : users) {
 			final String userId = doc.getKey(); //using userId as key
 			final String paymentId = (String) doc.getPaymentId();
-			
+
 			if (paymentId == null) continue;
-			
+
 			final List<Tx> transactions;
 			try {
+				log.info("Fetch bulk payments with blockHeight " + blockHeight);
 				transactions = this.wallet.getApi().getTransactions(paymentId, blockHeight);
 			} catch (RequestException e) {
 				e.printStackTrace();
 				continue;
 			}
-			
+
 			Krobot.getRuntime().jda().getUserById(userId).openPrivateChannel().queue((e) -> {
-				
+
+				log.info("Private channel opened with " + e.getUser().getName());
+
 				for (Tx tx : transactions) {
 					log.info("New incoming transaction for user " + userId);
-					this.wallet.addUnconfirmedFunds(userId, tx.getAmount());
-					this.wallet.getDB().addTx(tx, userId);
 
-					e.sendMessage(Dialog.info("Deposit", String.format("__**Amount**__: %s\n__**Tx hash**__: %s\n__**Block height**__: %s", tx.getAmount(), tx.getTxHash(), tx.getBlockHeight()))).queue();
+					if (this.wallet.getDB().existTx(tx.getTxHash()))
+					{
+						log.error(String.format("Duplicated TX Hash: '%s', ignored...", tx.getTxHash()));
+						continue;
+					}
+					
+
+					this.wallet.addUnconfirmedFunds(userId, tx.getAmount());
+					this.wallet.getDB().addTx(new Transaction(tx.getTxHash(), userId, tx.getBlockHeight(), tx.getAmount()));
+
+					e.sendMessage(bot.dialog("Deposit", String.format("__**Amount**__: %s\n__**Tx hash**__: %s\n__**Block height**__: %s", tx.getAmount(), tx.getTxHash(), tx.getBlockHeight()))).queue();
 				}
 			});
 		}

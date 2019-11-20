@@ -11,10 +11,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
@@ -27,7 +27,7 @@ import fr.slixe.dero4j.util.MapBuilder;
 
 public class DeroWallet implements IWallet
 {
-	private static final Logger log = LoggerFactory.getLogger("Dero Wallet");
+	private static final Logger log = LoggerContext.getContext().getLogger("Dero Wallet");
 	
 	private static final int SCALE = 12;
 
@@ -44,7 +44,7 @@ public class DeroWallet implements IWallet
 
 	private JSONObject request(JSONObject json) throws RequestException
 	{
-		System.out.println(json);
+		log.info(json.toString());
 		HttpResponse<JsonNode> req;
 		try {
 			req = Unirest.post(host).basicAuth(username, password).header("Content-Type", "application/json").body(json).asJson();
@@ -53,7 +53,7 @@ public class DeroWallet implements IWallet
 			throw new RequestException("Wallet is offline?");
 		}
 		JSONObject response = req.getBody().getObject();
-		System.out.println(response);
+		log.info(response.toString());
 		if (!response.has("result")) {
 			throw new RequestException(response.getJSONObject("error").getString("message"));
 		}
@@ -78,7 +78,11 @@ public class DeroWallet implements IWallet
 	@Override
 	public String transfer(String address, BigDecimal amount) throws RequestException
 	{
-		JSONObject json = request(json("transfer", new MapBuilder<String, Object>().put("address", address).put("amount", Helper.asUint64(amount, SCALE)).get()));
+		JSONObject dest = new JSONObject();
+		dest.put("address", address);
+		dest.put("amount", Helper.asUint64(amount, SCALE));
+		
+		JSONObject json = request(json("transfer", new MapBuilder<String, Object>().put("destinations", new JSONArray().put(dest)).get()));
 		return json.getString("tx_hash");
 	}
 
@@ -168,13 +172,19 @@ public class DeroWallet implements IWallet
 			return null;
 		}
 		JSONObject result = json.getJSONObject("payments");
-		return new Tx.InPayment(result.getInt("block_height"), result.getString("tx_hash"), Helper.toBigDecimal(result.getBigInteger("amount"), SCALE), (byte) json.getInt("unlock_time"), json.getString("payment_id"));
+		System.out.println("PAYMENTS: " + result.toString());
+		return new Tx.InPayment(result.getInt("block_height"), result.getString("tx_hash"), Helper.toBigDecimal(result.getBigInteger("amount"), SCALE), (byte) result.getInt("unlock_time"), result.getString("payment_id"));
 	}
 
 	@Override
 	public BigDecimal estimateFee(String address, BigDecimal amount) throws RequestException
 	{
-		JSONObject json = request(json("transfer", new MapBuilder<String, Object>().put("do_not_relay", true).put("address", address).put("amount", Helper.asUint64(amount, SCALE)).get()));
+		JSONObject dest = new JSONObject();
+		dest.put("address", address);
+		dest.put("amount", Helper.asUint64(amount, SCALE));
+
+		JSONObject json = request(json("transfer", new MapBuilder<String, Object>().put("do_not_relay", true).put("destinations", new JSONArray().put(dest)).get()));
+
 		return Helper.toBigDecimal(json.getBigInteger("fee"), SCALE);
 	}
 }

@@ -1,21 +1,20 @@
 package fr.slixe.tipbot.task;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.TimerTask;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 
-import com.arangodb.entity.BaseDocument;
 import com.google.inject.Inject;
 
 import fr.slixe.dero4j.RequestException;
+import fr.slixe.tipbot.Transaction;
 import fr.slixe.tipbot.Wallet;
 
 public class VerifyTask extends TimerTask {
 
-	private static final Logger log = LoggerFactory.getLogger("VerifyTask");
+	private static final Logger log = LoggerContext.getContext().getLogger("VerifyTask");
 	
 	@Inject
 	private Wallet wallet;
@@ -32,30 +31,27 @@ public class VerifyTask extends TimerTask {
 			log.error("Looks like wallet isn't reachable...");
 			return;
 		}
-		
-		List<BaseDocument> docs = wallet.getDB().getUnconfirmedTxs();
-		
-		for (BaseDocument doc : docs)
+
+		List<Transaction> txs = wallet.getDB().getUnconfirmedTxs();
+
+		for (Transaction tx : txs)
 		{
-			String txHash = doc.getKey();
-			String userId = (String) doc.getAttribute("userId");
-			int txBlockHeight = (int) doc.getAttribute("blockHeight");
-			BigDecimal amount = (BigDecimal) doc.getAttribute("amount");
-			
-			int diff = blockHeight - txBlockHeight;
+			int diff = (int) (blockHeight - tx.getBlockHeight());
 			diff = diff > 20 ? 20 : diff;
-			
+
 			try {
 				if (diff == 20) //we wait 20 blocks to verify instead of veryfing every block
 				{
-					if (!this.wallet.getApi().isValidTx(txHash))
+					if (!this.wallet.getApi().isValidTx(tx.getHash()))
 					{
-						this.wallet.getDB().removeTx(txHash);
+						log.error("Invalid transaction !! hash: '" + tx.getHash() + "'");
+						this.wallet.getDB().removeTx(tx.getHash());
 						continue;
 					}
 					else {
-						this.wallet.addFunds(userId, amount);
-						this.wallet.removeUnconfirmedFunds(userId, amount);
+						log.info("Amount: " + tx.getAmount());
+						this.wallet.addFunds(tx.getUserId(), tx.getAmount());
+						this.wallet.removeUnconfirmedFunds(tx.getUserId(), tx.getAmount());
 					}
 				}
 			} catch (RequestException e) {
@@ -63,7 +59,7 @@ public class VerifyTask extends TimerTask {
 				continue;
 			}
 			
-			this.wallet.getDB().updateTx(txHash, diff);			
+			this.wallet.getDB().updateTx(tx.getHash(), diff);			
 		}
 	}
 }

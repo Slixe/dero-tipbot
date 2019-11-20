@@ -15,11 +15,9 @@ import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;
 import com.arangodb.ArangoDatabase;
-import com.arangodb.entity.BaseDocument;
 import com.google.inject.Inject;
 
 import fr.slixe.dero4j.RequestException;
-import fr.slixe.dero4j.structure.Tx;
 import fr.slixe.dero4j.util.MapBuilder;
 
 @Singleton
@@ -187,49 +185,32 @@ public class ArangoDatabaseService
 		return all("FOR doc IN users RETURN doc", User.class, new HashMap<>());
 	}
 
-	public void addTx(Tx tx, String userId)
+	public void addTx(Transaction tx)
 	{
-		BaseDocument base = new BaseDocument();
-		base.addAttribute("amount", tx.getAmount());
-		base.addAttribute("userId", userId);
-		base.addAttribute("blockHeight", tx.getBlockHeight());
-		base.addAttribute("confirmed", false);
-		base.addAttribute("confirmations", 0);
-		
-		base.setKey(tx.getTxHash());
-		
-		txs.insertDocument(base);
+		txs.insertDocument(tx);
 	}
 
 	public void updateTx(String txHash, int confirmations)
 	{
-		BaseDocument doc = txs.getDocument(txHash, BaseDocument.class);
+		Transaction doc = txs.getDocument(txHash, Transaction.class);
 		
-		doc.updateAttribute("confirmations", confirmations);
+		doc.setConfirmations(confirmations);
 		
-		if (confirmations == 20)
-			doc.updateAttribute("confirmed", true);
-		
-		txs.updateDocument(doc.getKey(), doc);
+		txs.updateDocument(doc.getHash(), doc);
 	}
 
 	public void removeTx(String txHash) {
 		txs.deleteDocument(txHash);
 	}
 	
-	public List<BaseDocument> getConfirmedTxs()
+	public List<Transaction> getConfirmedTxs()
 	{
-		return getTxs(true);
+		return all("FOR doc IN txs FILTER doc.confirmations == @confirmations RETURN doc", Transaction.class, new MapBuilder<String, Object>().put("confirmations", 20).get());
 	}
 	
-	public List<BaseDocument> getUnconfirmedTxs()
+	public List<Transaction> getUnconfirmedTxs()
 	{
-		return getTxs(false);
-	}
-	
-	private List<BaseDocument> getTxs(boolean confirmed)
-	{
-		return all("FOR doc IN txs FILTER doc.confirmed == @confirmed RETURN doc", BaseDocument.class, new MapBuilder<String, Object>().put("confirmed", confirmed).get());
+		return all("FOR doc IN txs FILTER doc.confirmations < 20 RETURN doc", Transaction.class, new MapBuilder<String, Object>().get());
 	}
 	
 	protected <T> T first(String query, Class<T> type, Map<String, Object> vars)
@@ -258,5 +239,10 @@ public class ArangoDatabaseService
 		}
 		
 		return new User(userId, null, paymentId, BigDecimal.ZERO, BigDecimal.ZERO);
+	}
+
+	public boolean existTx(String txHash)
+	{
+		return txs.documentExists(txHash);
 	}
 }

@@ -69,7 +69,7 @@ public class InfoCommand implements CommandHandler
 		
 		StringBuilder builder = new StringBuilder();
 		builder.append("Height / Topoheight: ").append(height + " / " + topoHeight).append("\n");
-		builder.append("Average Block Time: ").append(blockTime).append("\n");
+		builder.append("Average Block Time: ").append(blockTime).append("s").append("\n");
 		builder.append("Difficulty: ").append(difficulty).append("\n");
 		builder.append("Mempool: ").append(txMempool).append("\n");
 		builder.append("Total Supply: ").append(totalSupply).append("\n");
