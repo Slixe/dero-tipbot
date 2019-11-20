@@ -2,12 +2,10 @@ package fr.slixe.tipbot.command;
 
 import java.math.BigDecimal;
 
-import org.jline.utils.Log;
 import org.krobot.MessageContext;
 import org.krobot.command.ArgumentMap;
 import org.krobot.command.Command;
 import org.krobot.command.CommandHandler;
-import org.krobot.util.Dialog;
 
 import com.google.inject.Inject;
 
