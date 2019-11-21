@@ -130,6 +130,16 @@ public class ArangoDatabaseService
 
 		return doc.getUnconfirmedBalance();
 	}
+	
+	public User getUser(String userId)
+	{
+		return users.getDocument(userId, User.class);
+	}
+
+	public void updateUser(User user)
+	{
+		users.updateDocument(user.getKey(), user);
+	}
 
 	public String getAddress(String key)
 	{
@@ -243,6 +253,22 @@ public class ArangoDatabaseService
 
 	public boolean existTx(String txHash)
 	{
+		//return first("FOR tx IN txs FILTER tx._key == @hash LIMIT 1 RETURN tx._key", String.class, new MapBuilder<String, Object>().put("hash", txHash).get()) != null;
 		return txs.documentExists(txHash);
+	}
+
+	public Transaction getTx(String txHash)
+	{
+		return txs.getDocument(txHash, Transaction.class);
+	}
+	
+	public String getUserIdFromPaymentId(String paymentId)
+	{
+		return first("FOR u IN users FILTER u.paymentId == @paymentId LIMIT 1 RETURN u._key", String.class, new MapBuilder<String, Object>().put("paymentId", paymentId).get());
+	}
+	
+	public boolean hasWithdrawAddress(String userId)
+	{
+		return first("RETURN DOCUMENT(CONCAT('users/', @userId).withdrawAddress != null", boolean.class, new MapBuilder<String, Object>().put("userId", userId).get());
 	}
 }

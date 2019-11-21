@@ -21,10 +21,13 @@ import com.google.inject.Singleton;
 import fr.slixe.dero4j.Daemon;
 import fr.slixe.tipbot.command.BalanceCommand;
 import fr.slixe.tipbot.command.CommandException;
+import fr.slixe.tipbot.command.DepositCommand;
 import fr.slixe.tipbot.command.HelpCommand;
 import fr.slixe.tipbot.command.InfoCommand;
 import fr.slixe.tipbot.command.TipCommand;
+import fr.slixe.tipbot.command.WithdrawAddressCommand;
 import fr.slixe.tipbot.command.WithdrawCommand;
+import fr.slixe.tipbot.command.WithdrawMaxCommand;
 import fr.slixe.tipbot.task.VerifyTask;
 import fr.slixe.tipbot.task.WalletTask;
 import net.dv8tion.jda.core.entities.MessageEmbed;
@@ -32,7 +35,7 @@ import net.dv8tion.jda.core.entities.PrivateChannel;
 
 @Singleton
 @Include(commands = { TipCommand.class, BalanceCommand.class, WithdrawCommand.class, InfoCommand.class,
-		HelpCommand.class })
+		HelpCommand.class, WithdrawMaxCommand.class, DepositCommand.class, WithdrawAddressCommand.class })
 @org.krobot.Bot(author = "Slixe", name = "Dero TipBot", version = "0.0.1")
 public class TipBot extends KrobotModule {
 

@@ -12,6 +12,7 @@ public class User
 	private String paymentId;
 	private BigDecimal balance;
 	private BigDecimal unconfirmedBalance;
+	private String withdrawAddress;
 	
 	public User() {}
 
@@ -83,5 +84,15 @@ public class User
 	public void setUnconfirmedBalance(BigDecimal balance)
 	{
 		this.unconfirmedBalance = balance;
+	}
+
+	public String getWithdrawAddress()
+	{
+		return this.withdrawAddress;
+	}
+	
+	public void setWithdrawAddress(String withdrawAddress)
+	{
+		this.withdrawAddress = withdrawAddress;
 	}
 }

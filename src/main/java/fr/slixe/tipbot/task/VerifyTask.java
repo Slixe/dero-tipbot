@@ -34,9 +34,12 @@ public class VerifyTask extends TimerTask {
 
 		List<Transaction> txs = wallet.getDB().getUnconfirmedTxs();
 
+		log.info(String.format("%d unconfirmed transactions!", txs.size()));
+
 		for (Transaction tx : txs)
 		{
 			int diff = (int) (blockHeight - tx.getBlockHeight());
+
 			diff = diff > 20 ? 20 : diff;
 
 			try {
@@ -58,7 +61,7 @@ public class VerifyTask extends TimerTask {
 				log.error(e.getMessage());
 				continue;
 			}
-			
+
 			this.wallet.getDB().updateTx(tx.getHash(), diff);			
 		}
 	}

@@ -47,7 +47,7 @@ public class Wallet {
 			log.info("Trying to start DERO Wallet...");
 			String path = this.config.at("wallet.launchPath");
 			File walletFile = new File(path);
-			
+
 			if (!walletFile.exists())
 			{
 				log.error(String.format("Error! Please verify your config, wallet file not found at '%s'.", path));

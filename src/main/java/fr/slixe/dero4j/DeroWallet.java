@@ -168,11 +168,12 @@ public class DeroWallet implements IWallet
 	public Tx.InPayment getTransferByHash(String txHash) throws RequestException
 	{
 		JSONObject json = request(json("get_transfer_by_txid", new MapBuilder<String, Object>().put("txid", txHash).get()));
+
 		if (!json.has("payments")) {
 			return null;
 		}
 		JSONObject result = json.getJSONObject("payments");
-		System.out.println("PAYMENTS: " + result.toString());
+
 		return new Tx.InPayment(result.getInt("block_height"), result.getString("tx_hash"), Helper.toBigDecimal(result.getBigInteger("amount"), SCALE), (byte) result.getInt("unlock_time"), result.getString("payment_id"));
 	}
 
