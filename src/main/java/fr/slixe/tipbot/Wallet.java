@@ -146,7 +146,7 @@ public class Wallet {
 	{
 		return this.api;
 	}
-	
+
 	public Process getProcess()
 	{
 		return this.process;

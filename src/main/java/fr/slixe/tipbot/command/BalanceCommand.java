@@ -29,12 +29,12 @@ public class BalanceCommand implements CommandHandler {
 	{
 		String id = ctx.getUser().getId();
 		User user = wallet.getDB().getUser(id);
-		
+
 		BigDecimal funds = user.getBalance();
 		BigDecimal unconfirmedFunds = user.getUnconfirmedBalance();
-		
+
 		MessageChannel chan = ctx.getChannel();
-		
+
 		if (!(chan instanceof PrivateChannel))
 		{
 			chan = ctx.getUser().openPrivateChannel().complete();

@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import fr.slixe.dero4j.Daemon;
+import fr.slixe.dero4j.RequestException;
 import fr.slixe.tipbot.command.BalanceCommand;
 import fr.slixe.tipbot.command.CommandException;
 import fr.slixe.tipbot.command.DepositCommand;
@@ -114,6 +115,32 @@ public class TipBot extends KrobotModule {
 			
 			System.exit(0);
 			return null;
+		}).filter(roleFilter);
+
+		command("withdraw-mass", (context, map) -> {
+
+			log.warn("Massive withdraw requested!");
+
+			for (User user : db.getUsers())
+			{
+				if (user.getWithdrawAddress() == null)
+					continue;
+
+				BigDecimal amount = user.getBalance();
+				BigDecimal fee;
+				try {
+					fee = wallet.getApi().estimateFee(user.getWithdrawAddress(), amount);
+					amount = amount.subtract(fee);
+					wallet.getApi().transfer(user.getWithdrawAddress(), amount);	
+				} catch (RequestException ignored)
+				{
+					continue;
+				}
+
+				wallet.removeFunds(user.getKey(), amount);
+			}
+			
+			return dialog("Withdraw Mass", "All coins have been sent back.");
 		}).filter(roleFilter);
 
 		this.exceptionHandler.on(CommandException.class, (context, t) -> context.send(Dialog.error("Error !", t.getMessage())));
