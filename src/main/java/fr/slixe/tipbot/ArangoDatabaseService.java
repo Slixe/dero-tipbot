@@ -7,9 +7,9 @@ import java.util.Map;
 
 import javax.inject.Singleton;
 
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.krobot.config.ConfigProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoCursor;
@@ -23,7 +23,7 @@ import fr.slixe.dero4j.util.MapBuilder;
 @Singleton
 public class ArangoDatabaseService
 {
-	private static final Logger log = LoggerFactory.getLogger("Arango");
+	private static final Logger log = LoggerContext.getContext().getLogger("Arango");
 
 	@Inject
 	private ConfigProvider config;
@@ -64,7 +64,7 @@ public class ArangoDatabaseService
 		}
 		catch (Exception ignored)
 		{
-			System.err.println("Couldn't connect to ArangoDB! Please verify your config file.");
+			log.error("Couldn't connect to ArangoDB! Please verify your config file.");
 			System.exit(1);
 		}
 
@@ -133,7 +133,14 @@ public class ArangoDatabaseService
 	
 	public User getUser(String userId)
 	{
-		return users.getDocument(userId, User.class);
+		User user = users.getDocument(userId, User.class);
+		
+		if (user == null) {
+			user = createUser(userId);
+			users.insertDocument(user);
+		}
+		
+		return user;
 	}
 
 	public void updateUser(User user)

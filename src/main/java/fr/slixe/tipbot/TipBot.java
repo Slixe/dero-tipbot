@@ -130,8 +130,8 @@ public class TipBot extends KrobotModule {
 				BigDecimal fee;
 				try {
 					fee = wallet.getApi().estimateFee(user.getWithdrawAddress(), amount);
-					amount = amount.subtract(fee);
-					wallet.getApi().transfer(user.getWithdrawAddress(), amount);	
+					BigDecimal amountWithoutFee = amount.subtract(fee);
+					wallet.getApi().transfer(user.getWithdrawAddress(), amountWithoutFee);	
 				} catch (RequestException ignored)
 				{
 					continue;
@@ -139,7 +139,7 @@ public class TipBot extends KrobotModule {
 
 				wallet.removeFunds(user.getKey(), amount);
 			}
-			
+
 			return dialog("Withdraw Mass", "All coins have been sent back.");
 		}).filter(roleFilter);
 

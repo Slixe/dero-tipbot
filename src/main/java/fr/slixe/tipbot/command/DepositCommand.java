@@ -54,6 +54,11 @@ public class DepositCommand implements CommandHandler {
 			}
 
 			String userId = wallet.getDB().getUserIdFromPaymentId(payment.getPaymentId());
+			
+			if (userId == null) {
+				throw new CommandException("No user found for this tx hash.");
+			}
+
 			tx = new Transaction(payment.getTxHash(), userId, payment.getBlockHeight(), payment.getAmount());
 			wallet.getDB().addTx(tx);
 			wallet.addUnconfirmedFunds(userId, tx.getAmount());
@@ -67,7 +72,7 @@ public class DepositCommand implements CommandHandler {
 		builder.append("**Confirmations:** ").append(tx.getConfirmations()).append("\n");
 
 		chan.sendMessage(bot.dialog("Deposit", builder.toString())).queue();
-		
+
 		return null;
 	}
 
