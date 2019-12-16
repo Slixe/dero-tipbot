@@ -49,8 +49,7 @@ public class DeroWallet implements IWallet
 		try {
 			req = Unirest.post(host).basicAuth(username, password).header("Content-Type", "application/json").body(json).asJson();
 		} catch (UnirestException e) {
-			log.error("Wallet is offline or invalid host/username/password ?");
-			throw new RequestException("Wallet is offline?");
+			throw new RequestException(e.getMessage());
 		}
 		JSONObject response = req.getBody().getObject();
 		log.info(response.toString());
@@ -81,8 +80,10 @@ public class DeroWallet implements IWallet
 		JSONObject dest = new JSONObject();
 		dest.put("address", address);
 		dest.put("amount", Helper.asUint64(amount, SCALE));
-		
+
 		JSONObject json = request(json("transfer", new MapBuilder<String, Object>().put("destinations", new JSONArray().put(dest)).get()));
+		log.info("DEST " + dest);
+		log.info("JSON " + json);
 		return json.getString("tx_hash");
 	}
 

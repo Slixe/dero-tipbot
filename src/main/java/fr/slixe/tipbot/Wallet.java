@@ -106,6 +106,22 @@ public class Wallet {
 
 		return address;
 	}
+	
+	public String getWithdrawAddress(String id)
+	{
+		return db.getWithdrawAddress(id);
+	}
+	
+	public String getNewAddress(String userKey) throws RequestException
+	{
+		String paymentId = this.api.paymentId();
+		String address = this.api.generateAddress(paymentId);
+
+		db.setPaymentId(userKey, paymentId);
+		db.setAddress(userKey, address);
+		
+		return address;
+	}
 
 	public BigDecimal getFunds(String id)
 	{

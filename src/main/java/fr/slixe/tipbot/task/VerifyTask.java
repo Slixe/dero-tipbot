@@ -57,12 +57,11 @@ public class VerifyTask extends TimerTask {
 						this.wallet.removeUnconfirmedFunds(tx.getUserId(), tx.getAmount());
 					}
 				}
+
+				this.wallet.getDB().updateTx(tx.getHash(), diff);
 			} catch (RequestException e) {
 				log.error(e.getMessage());
-				continue;
-			}
-
-			this.wallet.getDB().updateTx(tx.getHash(), diff);			
+			}		
 		}
 	}
 }

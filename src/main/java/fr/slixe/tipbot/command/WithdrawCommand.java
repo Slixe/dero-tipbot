@@ -2,6 +2,7 @@ package fr.slixe.tipbot.command;
 
 import java.math.BigDecimal;
 
+import org.jline.utils.Log;
 import org.krobot.MessageContext;
 import org.krobot.command.ArgumentMap;
 import org.krobot.command.Command;
@@ -15,7 +16,7 @@ import fr.slixe.tipbot.Wallet;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.PrivateChannel;
 
-@Command(value = "withdraw <amount> <address>", desc = "withdraw your coins from bot", errorMP = true)
+@Command(value = "withdraw <amount> [address]", desc = "withdraw your coins from bot", errorMP = true)
 public class WithdrawCommand implements CommandHandler {
 
 	@Inject
@@ -45,7 +46,6 @@ public class WithdrawCommand implements CommandHandler {
 			throw new CommandException(String.format(bot.getMessage("withdraw.err.invalid-amount"), ctx.getUser().getAsMention()));
 		}
 
-		String address = args.get("address");
 		String id = ctx.getUser().getId();
 
 		if (!wallet.hasEnoughFunds(id, amount))
@@ -53,15 +53,24 @@ public class WithdrawCommand implements CommandHandler {
 			throw new CommandException(bot.getMessage("withdraw.err.not-enough"));
 		}
 
+		String address;
+
+		if (args.has("address"))
+			address = args.get("address");
+		else
+			address = wallet.getAddress(id);
+		
+		if (address == null)
+			throw new CommandException("No default withdraw address found! set one with /withdraw-address <address>");
+
 		BigDecimal fee;
 		try {
 			fee = wallet.getApi().estimateFee(address, amount);
 		} catch (RequestException e)
 		{
-			e.printStackTrace();
 			throw new CommandException(e.getMessage());
 		}
-		
+
 		BigDecimal amountWithoutFee = amount.subtract(fee);
 
 		if (amountWithoutFee.signum() != 1)
@@ -74,7 +83,7 @@ public class WithdrawCommand implements CommandHandler {
 			tx = wallet.getApi().transfer(address, amountWithoutFee);
 		} catch (RequestException e) {
 			e.printStackTrace();
-			throw new CommandException(bot.getMessage("withdraw.err.transfer"));
+			throw new CommandException(bot.getMessage("withdraw.err.transfer") + " " + e.getMessage());
 		}
 
 		wallet.removeFunds(id, amount);

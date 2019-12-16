@@ -278,4 +278,9 @@ public class ArangoDatabaseService
 	{
 		return first("RETURN DOCUMENT(CONCAT('users/', @userId).withdrawAddress != null", boolean.class, new MapBuilder<String, Object>().put("userId", userId).get());
 	}
+	
+	public String getWithdrawAddress(String userId)
+	{
+		return first("RETURN DOCUMENT(CONCAT('users/', @userId).withdrawAddress", String.class, new MapBuilder<String, Object>().put("userId", userId).get());
+	}
 }

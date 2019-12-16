@@ -39,17 +39,16 @@ public class BalanceCommand implements CommandHandler {
 		{
 			chan = ctx.getUser().openPrivateChannel().complete();
 		}
-		
-		/*if (funds.equals("0") || funds.equals("0E-12")) //dirty i know :/
-			funds = "0.000000000000";
-		
-		if (unconfirmedFunds.equals("0") || unconfirmedFunds.equals("0E-12"))
-			unconfirmedFunds = "0.000000000000";*/
 
-		String address = wallet.getAddress(id);
+		String address = "No deposit address until you've set a withdraw address.";
 
-		if (user.getWithdrawAddress() == null)
-			address = "No deposit address until you've set a withdraw address.";
+		if (user.getWithdrawAddress() != null)
+		{
+			if (user.getAddress() != null)
+				address = user.getAddress();
+			else
+				address = wallet.getNewAddress(user.getKey());
+		}
 
 		chan.sendMessage(bot.dialog("Balance", String.format(bot.getMessage("balance"), funds, unconfirmedFunds, address))).queue();
 

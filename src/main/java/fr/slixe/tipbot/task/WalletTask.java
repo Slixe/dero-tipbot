@@ -77,26 +77,29 @@ public class WalletTask extends TimerTask
 				continue;
 			}
 
-			Krobot.getRuntime().jda().getUserById(userId).openPrivateChannel().queue((e) -> {
+			if (!transactions.isEmpty())
+			{
+				Krobot.getRuntime().jda().getUserById(userId).openPrivateChannel().queue((e) -> {
 
-				log.info("Private channel opened with " + e.getUser().getName());
+					log.info("Private channel opened with " + e.getUser().getName());
 
-				for (Tx tx : transactions) {
-					log.info("New incoming transaction for user " + userId);
+					for (Tx tx : transactions) {
+						log.info("New incoming transaction for user " + userId);
 
-					if (this.wallet.getDB().existTx(tx.getTxHash()))
-					{
-						log.error(String.format("Duplicated TX Hash: '%s', ignored...", tx.getTxHash()));
-						continue;
+						if (this.wallet.getDB().existTx(tx.getTxHash()))
+						{
+							log.error(String.format("Duplicated TX Hash: '%s', ignored...", tx.getTxHash()));
+							continue;
+						}
+						
+
+						this.wallet.addUnconfirmedFunds(userId, tx.getAmount());
+						this.wallet.getDB().addTx(new Transaction(tx.getTxHash(), userId, tx.getBlockHeight(), tx.getAmount()));
+
+						e.sendMessage(bot.dialog("Deposit", String.format("__**Amount**__: %s\n__**Tx hash**__: %s\n__**Block height**__: %s", tx.getAmount(), tx.getTxHash(), tx.getBlockHeight()))).queue();
 					}
-					
-
-					this.wallet.addUnconfirmedFunds(userId, tx.getAmount());
-					this.wallet.getDB().addTx(new Transaction(tx.getTxHash(), userId, tx.getBlockHeight(), tx.getAmount()));
-
-					e.sendMessage(bot.dialog("Deposit", String.format("__**Amount**__: %s\n__**Tx hash**__: %s\n__**Block height**__: %s", tx.getAmount(), tx.getTxHash(), tx.getBlockHeight()))).queue();
-				}
-			});
+				});
+			}
 		}
 		this.lastBlockHeight = blockHeight + diff;
 		this.wallet.saveWalletHeight(this.lastBlockHeight);
