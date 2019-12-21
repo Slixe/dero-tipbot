@@ -25,7 +25,7 @@ public class SmartContract
 		try {
 			httpResponse = Unirest.post(this.url).header("Content-Type", "application/json").body(new JSONObject().put("txs_hashes", new String[]{scid}).put("sc_keys", key)).asJson();
 		} catch (UnirestException e) {
-			throw new RequestException("Daemon isn't reachable.");
+			throw new RequestException(e.getMessage());
 		}
 		JSONObject json = httpResponse.getBody().getObject();
 		if (json.getString("status").equals("TX NOT FOUND"))

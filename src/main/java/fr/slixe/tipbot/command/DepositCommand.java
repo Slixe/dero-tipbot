@@ -7,15 +7,13 @@ import org.krobot.command.CommandHandler;
 
 import com.google.inject.Inject;
 
+import fr.slixe.dero4j.RequestException;
 import fr.slixe.dero4j.structure.Tx.InPayment;
 import fr.slixe.tipbot.TipBot;
 import fr.slixe.tipbot.Transaction;
 import fr.slixe.tipbot.Wallet;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.PrivateChannel;
 
-
-@Command(value = "deposit <txhash>", desc = "search your deposit", errorMP = true)
+@Command(value = "deposit <txhash>", desc = "search your deposit", errorMP = true, handleMP = true)
 public class DepositCommand implements CommandHandler {
 
 	@Inject
@@ -27,13 +25,6 @@ public class DepositCommand implements CommandHandler {
 	@Override
 	public Object handle(MessageContext ctx, ArgumentMap args) throws Exception
 	{
-		MessageChannel chan = ctx.getChannel();
-
-		if (!(chan instanceof PrivateChannel))
-		{
-			chan = ctx.getUser().openPrivateChannel().complete();
-		}
-
 		String txHash = args.get("txhash");
 		Transaction tx;
 
@@ -46,15 +37,19 @@ public class DepositCommand implements CommandHandler {
 		}
 		else
 		{
-			InPayment payment = wallet.getApi().getTransferByHash(txHash);
+			InPayment payment;
 
-			if (payment == null)
+			try
 			{
-				throw new CommandException("This transaction hash does not exist!");
+				payment = wallet.getApi().getTransferByHash(txHash);
+			}
+			catch (RequestException e)
+			{
+				throw new CommandException(e.getMessage());
 			}
 
 			String userId = wallet.getDB().getUserIdFromPaymentId(payment.getPaymentId());
-			
+
 			if (userId == null) {
 				throw new CommandException("No user found for this tx hash.");
 			}
@@ -71,9 +66,6 @@ public class DepositCommand implements CommandHandler {
 		builder.append("**Amount:** ").append(tx.getAmount()).append("\n");
 		builder.append("**Confirmations:** ").append(tx.getConfirmations()).append("\n");
 
-		chan.sendMessage(bot.dialog("Deposit", builder.toString())).queue();
-
-		return null;
+		return bot.dialog("Deposit", builder.toString());
 	}
-
 }

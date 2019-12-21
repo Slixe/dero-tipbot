@@ -10,10 +10,8 @@ import com.google.inject.Inject;
 import fr.slixe.tipbot.ArangoDatabaseService;
 import fr.slixe.tipbot.TipBot;
 import fr.slixe.tipbot.User;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.PrivateChannel;
 
-@Command(value = "withdraw-address <address>", desc = "set your default withdraw address", errorMP = true)
+@Command(value = "withdraw-address [address]", desc = "set your default withdraw address", errorMP = true, handleMP = true)
 public class WithdrawAddressCommand implements CommandHandler {
 
 	@Inject
@@ -25,11 +23,12 @@ public class WithdrawAddressCommand implements CommandHandler {
 	@Override
 	public Object handle(MessageContext ctx, ArgumentMap args) throws Exception
 	{
-		MessageChannel chan = ctx.getChannel();
-
-		if (!(chan instanceof PrivateChannel))
+		if (!args.has("address"))
 		{
-			chan = ctx.getUser().openPrivateChannel().complete();
+			String wAddress = this.db.getWithdrawAddress(ctx.getUser().getId());
+			String msg = wAddress != null ? ": " + wAddress : " not set.\nPlease do ```/withdraw-address <address>```";
+
+			return bot.dialog("Withdraw Address", "Your withdrawal address is" + msg);
 		}
 
 		String address = args.get("address");
@@ -41,9 +40,7 @@ public class WithdrawAddressCommand implements CommandHandler {
 
 		db.updateUser(user);
 
-		chan.sendMessage(bot.dialog("Withdraw Address", "Your withdrawal address has been set!")).queue();
-
-		return null;
+		return bot.dialog("Withdraw Address", "Your withdrawal address has been set!");
 	}
 
 }

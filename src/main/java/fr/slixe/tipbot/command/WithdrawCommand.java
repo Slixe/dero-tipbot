@@ -2,7 +2,6 @@ package fr.slixe.tipbot.command;
 
 import java.math.BigDecimal;
 
-import org.jline.utils.Log;
 import org.krobot.MessageContext;
 import org.krobot.command.ArgumentMap;
 import org.krobot.command.Command;
@@ -13,8 +12,6 @@ import com.google.inject.Inject;
 import fr.slixe.dero4j.RequestException;
 import fr.slixe.tipbot.TipBot;
 import fr.slixe.tipbot.Wallet;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.PrivateChannel;
 
 @Command(value = "withdraw <amount> [address]", desc = "withdraw your coins from bot", errorMP = true)
 public class WithdrawCommand implements CommandHandler {
@@ -28,13 +25,6 @@ public class WithdrawCommand implements CommandHandler {
 	@Override
 	public Object handle(MessageContext ctx, ArgumentMap args) throws Exception { //TODO add Withdraw to a task and not call withdraw directly..
 		BigDecimal amount;
-
-		MessageChannel chan = ctx.getChannel();
-
-		if (!(chan instanceof PrivateChannel))
-		{
-			chan = ctx.getUser().openPrivateChannel().complete();
-		}
 
 		try {
 			amount = new BigDecimal(args.get("amount", String.class));
@@ -75,7 +65,7 @@ public class WithdrawCommand implements CommandHandler {
 
 		if (amountWithoutFee.signum() != 1)
 		{
-			throw new CommandException("Not enough funds!");
+			throw new CommandException("Not enough funds in this withdrawal. Transaction fees are deducted from the amount to be withdrawn.");
 		}
 		
 		String tx;
@@ -88,8 +78,6 @@ public class WithdrawCommand implements CommandHandler {
 
 		wallet.removeFunds(id, amount);
 
-		chan.sendMessage(bot.dialog("Withdraw", String.format("You've withdrawn %s **DERO** to:\n%s\n\n__**Tx hash**__:\n%s\n\n__**Fee**__: %s", amountWithoutFee, address, tx, fee))).queue();
-
-		return null;
+		return bot.dialog("Withdraw", String.format("You've withdrawn %s **DERO** to:\n%s\n\n__**Tx hash**__:\n%s\n\n__**Fee**__: %s", amountWithoutFee, address, tx, fee));
 	}
 }

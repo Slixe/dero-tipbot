@@ -17,10 +17,8 @@ import fr.slixe.tipbot.Cache;
 import fr.slixe.tipbot.Info;
 import fr.slixe.tipbot.TipBot;
 import fr.slixe.tipbot.Wallet;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.PrivateChannel;
 
-@Command(value = "info", desc = "DERO Network information", errorMP = true)
+@Command(value = "info", desc = "DERO Network information", errorMP = true, handleMP = true)
 public class InfoCommand implements CommandHandler
 {
 	private static final DateFormat dateFormat = DateFormat.getInstance();
@@ -37,20 +35,13 @@ public class InfoCommand implements CommandHandler
 	@Override
 	public Object handle(MessageContext ctx, ArgumentMap args) throws Exception
 	{
-		MessageChannel chan = ctx.getChannel();
-		
-		if (!(chan instanceof PrivateChannel))
-		{
-			chan = ctx.getUser().openPrivateChannel().complete();
-		}
-
 		int walletHeight = 0;	
 		
 		try {
 			walletHeight = this.wallet.getApi().getHeight();
-			chan.sendMessage(bot.dialog("Wallet information", "**Height**: " + walletHeight)).queue();
+			ctx.send(bot.dialog("Wallet information", "**Height**: " + walletHeight));
 		} catch (RequestException ignored) {
-			chan.sendMessage(Dialog.error("Wallet information", "Wallet isn't available.")).queue();
+			ctx.send(Dialog.error("Wallet information", "Wallet isn't available."));
 			//throw new CommandException("Wallet isn't available!");
 		}
 		
@@ -68,8 +59,7 @@ public class InfoCommand implements CommandHandler
 		builder.append("**Total Supply:** ").append(info.getTotalSupply()).append("\n");
 		builder.append("**Daemon Version:** ").append(info.getDaemonVersion()).append("\n");
 		builder.append("\n").append(Markdown.italic(dateFormat.format(new Date(info.getMillis()))));
-		chan.sendMessage(bot.dialog("Network information", builder.toString())).queue();
 
-		return null;
+		return bot.dialog("Network information", builder.toString());
 	}
 }

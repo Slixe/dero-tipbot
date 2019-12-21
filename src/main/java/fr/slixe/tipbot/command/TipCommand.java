@@ -65,7 +65,7 @@ public class TipCommand implements CommandHandler {
 		ctx.getUser().openPrivateChannel().queue((e) -> {
 			e.sendMessage(bot.dialog("Tip Bot", String.format(bot.getMessage("tip.sent"), strAmount, to.getAsMention()))).queue();
 		});
-		
+
 		return bot.dialog("Tip Bot", String.format(bot.getMessage("tip.general"), ctx.getUser().getAsMention(), strAmount, to.getAsMention()));
 	}
 }

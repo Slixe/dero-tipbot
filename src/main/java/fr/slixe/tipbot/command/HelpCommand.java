@@ -34,9 +34,6 @@ import org.krobot.util.Dialog;
 import org.krobot.util.Markdown;
 import org.krobot.util.MessageUtils;
 
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.PrivateChannel;
-
 /**
  * The Help Command<br><br>
  *
@@ -50,7 +47,7 @@ import net.dv8tion.jda.core.entities.PrivateChannel;
  * @version 2.2.0
  * @since 2.0.0
  */
-@Command(value = "help", desc = "Displays the list of commands with their descriptions", errorMP = true)
+@Command(value = "help", desc = "Displays the list of commands with their descriptions", errorMP = true, handleMP = true)
 public class HelpCommand implements CommandHandler
 {
     private KrobotRuntime runtime;
@@ -63,14 +60,7 @@ public class HelpCommand implements CommandHandler
 
     @Override
     public Object handle(MessageContext context, ArgumentMap args)
-    {
-		MessageChannel chan = context.getChannel();
-		
-		if (!(chan instanceof PrivateChannel))
-		{
-			chan = context.getUser().openPrivateChannel().complete();
-		}
-    	
+    {    	
         StringBuilder curMessage = new StringBuilder();
 
         List<StringBuilder> messages = new ArrayList<>();
@@ -104,11 +94,11 @@ public class HelpCommand implements CommandHandler
             curMessage.append(cmdStr).append("\n\n");
         }
 
-        chan.sendMessage(Dialog.info(Markdown.underline("List of commands :"), messages.get(0).toString())).queue();
+        context.send(Dialog.info(Markdown.underline("List of commands :"), messages.get(0).toString()));
 
         for(int i = 1; i < messages.size(); i++)
         {
-        	 chan.sendMessage(Dialog.info(null, messages.get(i).toString())).queue();
+        	 context.send(Dialog.info(null, messages.get(i).toString()));
         }
 
         return null;

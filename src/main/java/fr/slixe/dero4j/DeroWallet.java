@@ -138,6 +138,7 @@ public class DeroWallet implements IWallet
 	{
 		LinkedHashMap<String, Object> params = new MapBuilder<String, Object>().put("get_tx_key", true).get();
 		LinkedHashMap<String, Object> scTx = new MapBuilder<String, Object>().put("scid", scid).put("entrypoint", entrypoint).get();
+
 		if (amount != null)
 			params.put("value", asUint64(amount, 12));
 		
