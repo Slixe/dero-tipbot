@@ -6,3 +6,4 @@ build
 /.project
 /.classpath
 /dero-wallet-cli-linux-amd64.log
+/dero_linux_amd64.tar.gz

@@ -53,7 +53,7 @@ public class WalletTask extends TimerTask
 		{
 			diff = blockHeight - this.lastBlockHeight;
 			log.warn("Multiple blocks detected, current wallet block height is " + blockHeight + " and last block height is " + this.lastBlockHeight);
-			blockHeight = blockHeight - diff + 1;
+			blockHeight = blockHeight - diff;
 			log.warn("Now, it's " + blockHeight);
 		}
 		
@@ -77,7 +77,7 @@ public class WalletTask extends TimerTask
 				continue;
 			}
 
-			if (!transactions.isEmpty())
+			if (transactions != null && !transactions.isEmpty())
 			{
 				Krobot.getRuntime().jda().getUserById(userId).openPrivateChannel().queue((e) -> {
 

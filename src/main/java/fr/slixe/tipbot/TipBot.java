@@ -2,6 +2,7 @@ package fr.slixe.tipbot;
 
 import java.awt.Color;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
@@ -142,7 +143,32 @@ public class TipBot extends KrobotModule {
 
 			return dialog("Withdraw Mass", "All coins have been sent back.");
 		}).filter(roleFilter);
-
+		
+		command("balance-remove <user:user> <amount>", (context, map) -> {
+			
+			net.dv8tion.jda.core.entities.User user = map.get("user");
+			BigDecimal amount;
+			try {
+				amount = new BigDecimal(map.get("amount", String.class)).setScale(12, RoundingMode.DOWN);
+				if (amount.signum() != 1)
+					throw new CommandException(getMessage("tip.err.positive-value"));
+				if (amount.scale() > 12)
+					throw new CommandException(getMessage("tip.err.scale"));
+			}
+			catch (NumberFormatException e)
+			{
+				throw new CommandException(String.format(getMessage("tip.err.invalid-amount"), context.getUser().getAsMention()));
+			}
+			String id = user.getId();
+			
+			if(!wallet.hasEnoughFunds(id, amount))
+				throw new CommandException("Amount is greater than user balance");
+			
+			wallet.removeFunds(id, amount);
+			
+			return dialog("Balance Remove", amount + "have been removed from his balance");
+		}).filter(roleFilter);
+		
 		this.exceptionHandler.on(CommandException.class, (context, t) -> context.send(Dialog.error("Error !", t.getMessage())));
 
 		loadConfig();
@@ -159,8 +185,8 @@ public class TipBot extends KrobotModule {
 
 		this.daemon = new Daemon(daemonHost);
 		
-		timer.scheduleAtFixedRate(task, TimeUnit.SECONDS.toMillis(20), TimeUnit.SECONDS.toMillis(30));
-		timer.scheduleAtFixedRate(verifyTask, TimeUnit.SECONDS.toMillis(20), TimeUnit.SECONDS.toMillis(30));
+		timer.scheduleAtFixedRate(task, TimeUnit.SECONDS.toMillis(30), TimeUnit.SECONDS.toMillis(60)); //every 60s
+		timer.scheduleAtFixedRate(verifyTask, TimeUnit.SECONDS.toMillis(30), TimeUnit.SECONDS.toMillis(60));
 	}
 	
 	public void loadConfig()
